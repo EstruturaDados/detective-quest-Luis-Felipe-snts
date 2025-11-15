@@ -45,3 +45,220 @@ int main() {
     return 0;
 }
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef _WIN32
+    #include <windows.h>
+    #define CLEAR_SCREEN() system("cls")
+#else
+    #define CLEAR_SCREEN() system("clear")
+#endif
+
+// Estrutura de dados representando uma sala da mansão
+// Renomeei alguns campos para torná-los mais intuitivos
+
+typedef struct Sala {
+    char nomeSala[50];              // Nome da sala
+    struct Sala *caminhoEsquerda;   // Ponteiro para a sala à esquerda
+    struct Sala *caminhoDireita;    // Ponteiro para a sala à direita
+} Sala;
+
+// Protótipos das funções
+Sala* criarSala(const char* nome);
+Sala* montarMapaMansao();
+void limparTela();
+void pausarExecucao();
+void mostrarTitulo();
+void mostrarDespedida();
+void mostrarBoasVindas();
+void explorarSalas(Sala* salaAtual);
+void processarNavegacao(Sala** salaAtual, char opcao);
+void mostrarCaminhosDisponiveis(Sala* salaAtual);
+void verificarSalaFinal(Sala* salaAtual);
+void liberarMapa(Sala* raiz);
+
+// Função para criar uma nova sala
+Sala* criarSala(const char* nome) {
+    Sala* novaSala = (Sala*)malloc(sizeof(Sala));
+
+    if (novaSala == NULL) {
+        printf("Erro ao alocar memoria para sala.\n");
+        exit(1);
+    }
+
+    strcpy(novaSala->nomeSala, nome);
+    novaSala->caminhoEsquerda = NULL;
+    novaSala->caminhoDireita = NULL;
+
+    return novaSala;
+}
+
+// Monta toda a estrutura de salas da mansão
+Sala* montarMapaMansao() {
+    Sala* hallEntrada = criarSala("Hall de Entrada");
+    Sala* salaEstar = criarSala("Sala de Estar");
+    Sala* cozinha = criarSala("Cozinha");
+    Sala* biblioteca = criarSala("Biblioteca");
+    Sala* quartoHospedes = criarSala("Quarto de Hospedes");
+    Sala* jardim = criarSala("Jardim");
+    Sala* salaJantar = criarSala("Sala de Jantar");
+    Sala* escritorio = criarSala("Escritorio Secreto");
+    Sala* porao = criarSala("Porao");
+    Sala* terraco = criarSala("Terraco");
+    Sala* quartoPrincipal = criarSala("Quarto Principal");
+    Sala* banheiro = criarSala("Banheiro");
+
+    // Ligações da árvore de salas
+    hallEntrada->caminhoEsquerda = salaEstar;
+    hallEntrada->caminhoDireita = cozinha;
+
+    salaEstar->caminhoEsquerda = biblioteca;
+    salaEstar->caminhoDireita = quartoHospedes;
+
+    cozinha->caminhoEsquerda = jardim;
+    cozinha->caminhoDireita = salaJantar;
+
+    biblioteca->caminhoEsquerda = escritorio;
+    biblioteca->caminhoDireita = porao;
+
+    quartoHospedes->caminhoEsquerda = terraco;
+    quartoHospedes->caminhoDireita = quartoPrincipal;
+
+    jardim->caminhoDireita = banheiro;
+
+    return hallEntrada;
+}
+
+void limparTela() {
+    CLEAR_SCREEN();
+}
+
+void pausarExecucao() {
+    printf("Pressione Enter para continuar...");
+    getchar();
+    getchar();
+}
+
+void mostrarTitulo() {
+    printf("=== DETECTIVE QUEST ===\n\n");
+}
+
+void mostrarBoasVindas() {
+    printf("Bem-vindo ao Detective Quest!\n");
+    printf("Explore a mansao e descubra pistas escondidas.\n");
+    printf("Pressione Enter para comecar...");
+}
+
+void mostrarDespedida() {
+    limparTela();
+    printf("Obrigado por jogar Detective Quest!\n\n");
+}
+
+// Função principal de exploração
+void explorarSalas(Sala* salaAtual) {
+    char opcao;
+
+    while (salaAtual != NULL) {
+        limparTela();
+        mostrarTitulo();
+
+        printf("Voce esta na: %s\n\n", salaAtual->nomeSala);
+
+        verificarSalaFinal(salaAtual);
+        if (salaAtual->caminhoEsquerda == NULL && salaAtual->caminhoDireita == NULL) {
+            break;
+        }
+
+        mostrarCaminhosDisponiveis(salaAtual);
+        printf("Para onde deseja ir? ");
+        scanf(" %c", &opcao);
+
+        processarNavegacao(&salaAtual, opcao);
+    }
+}
+
+// Exibe opções válidas de caminhos
+void mostrarCaminhosDisponiveis(Sala* salaAtual) {
+    printf("Caminhos disponiveis:\n");
+
+    if (salaAtual->caminhoEsquerda != NULL)
+        printf("[e] Esquerda -> %s\n", salaAtual->caminhoEsquerda->nomeSala);
+
+    if (salaAtual->caminhoDireita != NULL)
+        printf("[d] Direita  -> %s\n", salaAtual->caminhoDireita->nomeSala);
+
+    printf("[s] Sair do jogo\n\n");
+}
+
+// Identifica salas finais
+void verificarSalaFinal(Sala* salaAtual) {
+    if (salaAtual->caminhoEsquerda == NULL && salaAtual->caminhoDireita == NULL) {
+        printf(">>> Esta e uma sala final!\n");
+        printf(">>> Nao ha mais caminhos para explorar.\n\n");
+        pausarExecucao();
+    }
+}
+
+// Processa movimento do jogador
+void processarNavegacao(Sala** salaAtual, char opcao) {
+    switch (opcao) {
+        case 'e':
+        case 'E':
+            if ((*salaAtual)->caminhoEsquerda != NULL)
+                *salaAtual = (*salaAtual)->caminhoEsquerda;
+            else {
+                printf("\n>>> Nao ha caminho a esquerda!\n");
+                pausarExecucao();
+            }
+            break;
+
+        case 'd':
+        case 'D':
+            if ((*salaAtual)->caminhoDireita != NULL)
+                *salaAtual = (*salaAtual)->caminhoDireita;
+            else {
+                printf("\n>>> Nao ha caminho a direita!\n");
+                pausarExecucao();
+            }
+            break;
+
+        case 's':
+        case 'S':
+            printf("\n>>> Saindo do jogo...\n");
+            *salaAtual = NULL;
+            break;
+
+        default:
+            printf("\n>>> Opcao invalida!\n");
+            pausarExecucao();
+            break;
+    }
+}
+
+// Libera memória da árvore de salas
+void liberarMapa(Sala* raiz) {
+    if (raiz == NULL)
+        return;
+
+    liberarMapa(raiz->caminhoEsquerda);
+    liberarMapa(raiz->caminhoDireita);
+
+    free(raiz);
+}
+
+int main() {
+    Sala* inicioMapa = montarMapaMansao();  // Renomeado para clareza
+
+    mostrarBoasVindas();
+    getchar();
+
+    explorarSalas(inicioMapa);
+
+    mostrarDespedida();
+
+    liberarMapa(inicioMapa);
+
+    return 0;
+}
